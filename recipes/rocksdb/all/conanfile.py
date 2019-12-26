@@ -1,4 +1,6 @@
 from conans import ConanFile, CMake, tools
+from conans.tools import Version
+from conans.errors import ConanInvalidConfiguration
 import os
 
 
@@ -24,7 +26,7 @@ class RocksDB(ConanFile):
     }
     default_options = {
         "shared": False,
-        "fPIC": False,
+        "fPIC": True,
         "lite": False,
         "with_snappy": False,
         "with_lz4": False,
@@ -47,6 +49,12 @@ class RocksDB(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+
+    def configure(self):
+        if self.settings.os == "Windows" and \
+           self.settings.compiler == "Visual Studio" and \
+           Version(self.settings.compiler.version) < "15":
+            raise ConanInvalidConfiguration("Rocksdb requires Visual Studio 15 or later.")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
