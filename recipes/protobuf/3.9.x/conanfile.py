@@ -48,7 +48,7 @@ class ProtobufConan(ConanFile):
             self.requires("zlib/1.2.11")
 
     def _configure_cmake(self):
-        cmake = CMake(self, set_cmake_flags=True)
+        cmake = CMake(self)
         cmake.definitions["protobuf_BUILD_TESTS"] = False
         cmake.definitions["protobuf_WITH_ZLIB"] = self.options.with_zlib
         cmake.definitions["protobuf_BUILD_PROTOC_BINARIES"] = not self.options.lite
@@ -84,4 +84,5 @@ class ProtobufConan(ConanFile):
         if self.settings.os == "Windows":
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
-        self.cpp_info.name = "Protobuf"
+        self.cpp_info.names["cmake_find_package"] = "Protobuf"
+        self.cpp_info.names["cmake_find_package_multi"] = "Protobuf"

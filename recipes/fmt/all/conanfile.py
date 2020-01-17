@@ -1,4 +1,6 @@
 from conans import ConanFile, CMake, tools
+from conans.errors import ConanInvalidConfiguration
+from conans.tools import Version
 import os
 
 
@@ -32,6 +34,13 @@ class FmtConan(ConanFile):
             self.settings.clear()
             del self.options.fPIC
             del self.options.shared
+        elif self.version == "6.1.0" and \
+             self.settings.os == "Windows" and \
+             self.settings.compiler == "Visual Studio" and \
+             Version(self.settings.compiler.version) < "16" and \
+             self.options.shared:
+            raise ConanInvalidConfiguration("Could not support this specific configuration. "
+                                            "Try static or header-only instead.")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
@@ -67,11 +76,14 @@ class FmtConan(ConanFile):
         tools.rmdir(os.path.join(self.package_folder, "lib", "pkgconfig"))
         tools.rmdir(os.path.join(self.package_folder, "share"))
 
+    def package_id(self):
+        if self.options.header_only:
+            self.info.header_only()
+
     def package_info(self):
         if self.options.with_fmt_alias:
             self.cpp_info.defines.append("FMT_STRING_ALIAS=1")
         if self.options.header_only:
-            self.info.header_only()
             self.cpp_info.defines = ["FMT_HEADER_ONLY"]
         else:
             self.cpp_info.libs = tools.collect_libs(self)
