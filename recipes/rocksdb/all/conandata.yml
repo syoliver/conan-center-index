@@ -1,8 +1,4 @@
 sources:
-  "6.5.2":
-    sha256: a923e36aa1cdd1429ae93a0b26baf477c714060ce7dd1c52e873754e1468d7ff
-    url: https://github.com/facebook/rocksdb/archive/v6.5.2.tar.gz
-patches:
-  "6.5.2":
-    - base_path: source_subfolder
-      patch_file: patches/0001-install-libs.patch
+  "6.6.4":
+    sha256: feab859ee355fbe7beffd7085904b63f560417f450f83cc34310e6dadff936f6
+    url: https://github.com/facebook/rocksdb/archive/v6.6.4.tar.gz

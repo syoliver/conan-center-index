@@ -35,8 +35,9 @@ class RocksDB(ConanFile):
         "with_gflags": False,
         "with_tbb": False
     }
-    exports_sources = ["CMakeLists.txt", "patches/*"]
+    exports_sources = ["CMakeLists.txt"]
     generators = ["cmake"]
+    _cmake = None
 
     @property
     def _source_subfolder(self):
@@ -62,24 +63,25 @@ class RocksDB(ConanFile):
         os.rename(extracted_dir, self._source_subfolder)
 
     def _configure_cmake(self):
-        cmake = CMake(self)
-        cmake.definitions["WITH_MD_LIBRARY"] = self.settings.compiler == "Visual Studio" and "MD" in self.settings.compiler.runtime
-        cmake.definitions["ROCKSDB_INSTALL_ON_WINDOWS"] = self.settings.os == "Windows"
-        cmake.definitions["ROCKSDB_LITE"] = self.options.lite
-        cmake.definitions["WITH_TESTS"] = False
-        cmake.definitions["WITH_TOOLS"] = False
-        cmake.definitions["WITH_GFLAGS"] = self.options.with_gflags
-        cmake.definitions["WITH_SNAPPY"] = self.options.with_snappy
-        cmake.definitions["WITH_LZ4"] = self.options.with_lz4
-        cmake.definitions["WITH_ZLIB"] = self.options.with_zlib
-        cmake.definitions["WITH_ZSTD"] = self.options.with_zstd
-        cmake.definitions["WITH_TBB"] = self.options.with_tbb
+        if not self._cmake:
+            self._cmake = CMake(self)
+        self._cmake.definitions["WITH_MD_LIBRARY"] = self.settings.compiler == "Visual Studio" and "MD" in self.settings.compiler.runtime
+        self._cmake.definitions["ROCKSDB_INSTALL_ON_WINDOWS"] = self.settings.os == "Windows"
+        self._cmake.definitions["ROCKSDB_LITE"] = self.options.lite
+        self._cmake.definitions["WITH_TESTS"] = False
+        self._cmake.definitions["WITH_TOOLS"] = False
+        self._cmake.definitions["WITH_GFLAGS"] = self.options.with_gflags
+        self._cmake.definitions["WITH_SNAPPY"] = self.options.with_snappy
+        self._cmake.definitions["WITH_LZ4"] = self.options.with_lz4
+        self._cmake.definitions["WITH_ZLIB"] = self.options.with_zlib
+        self._cmake.definitions["WITH_ZSTD"] = self.options.with_zstd
+        self._cmake.definitions["WITH_TBB"] = self.options.with_tbb
         # not available yet in CCI
-        cmake.definitions["WITH_JEMALLOC"] = False
-        cmake.definitions["WITH_NUMA"] = False
+        self._cmake.definitions["WITH_JEMALLOC"] = False
+        self._cmake.definitions["WITH_NUMA"] = False
 
-        cmake.configure(build_folder=self._build_subfolder)
-        return cmake
+        self._cmake.configure(build_folder=self._build_subfolder)
+        return self._cmake
 
     def build(self):
         for patch in self.conan_data["patches"][self.version]:
