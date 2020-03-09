@@ -111,7 +111,8 @@ class RocksDB(ConanFile):
         tools.rmdir(os.path.join(self.package_folder, "lib", "cmake"))
 
     def package_info(self):
-        self.cpp_info.name = "RocksDB"
+        self.cpp_info.names["cmake_find_package"] = "RocksDB"
+        self.cpp_info.names["cmake_find_package_multi"] = "RocksDB"
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == "Windows":
             self.cpp_info.system_libs = ["Shlwapi.lib", "Rpcrt4.lib"]
