@@ -59,7 +59,7 @@ class RocksDB(ConanFile):
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
-        extracted_dir = "rocksdb-" + self.version
+        extracted_dir = self.name + "-" + os.path.basename(self.conan_data["sources"][self.version]["url"]).split(".")[0]
         os.rename(extracted_dir, self._source_subfolder)
 
     def _configure_cmake(self):
@@ -70,12 +70,15 @@ class RocksDB(ConanFile):
         self._cmake.definitions["ROCKSDB_LITE"] = self.options.lite
         self._cmake.definitions["WITH_TESTS"] = False
         self._cmake.definitions["WITH_TOOLS"] = False
+        self._cmake.definitions["WITH_FOLLY_DISTRIBUTED_MUTEX"] = False
         self._cmake.definitions["WITH_GFLAGS"] = self.options.with_gflags
         self._cmake.definitions["WITH_SNAPPY"] = self.options.with_snappy
         self._cmake.definitions["WITH_LZ4"] = self.options.with_lz4
         self._cmake.definitions["WITH_ZLIB"] = self.options.with_zlib
         self._cmake.definitions["WITH_ZSTD"] = self.options.with_zstd
         self._cmake.definitions["WITH_TBB"] = self.options.with_tbb
+        self._cmake.definitions["ROCKSDB_BUILD_SHARED"] = self.options.shared
+        self._cmake.definitions["WITH_BENCHMARK_TOOLS"] = False
         # not available yet in CCI
         self._cmake.definitions["WITH_JEMALLOC"] = False
         self._cmake.definitions["WITH_NUMA"] = False

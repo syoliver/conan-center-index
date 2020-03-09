@@ -1,4 +1,4 @@
 sources:
-  "6.6.4":
-    sha256: feab859ee355fbe7beffd7085904b63f560417f450f83cc34310e6dadff936f6
-    url: https://github.com/facebook/rocksdb/archive/v6.6.4.tar.gz
+  "20200307":
+    sha256: 260ddb8fb7185bb12b8ba0a47e967bbe1e70dd95274b01175bf3ac6f03b801d2
+    url: https://github.com/facebook/rocksdb/archive/d93812c9aeb7de454f2f564be57f41b7195f4b43.zip
