@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iostream>
 #include "rocksdb/db.h"
 
 int main() {
@@ -6,7 +7,10 @@ int main() {
   rocksdb::Options options;
   options.create_if_missing = true;
   rocksdb::Status status = rocksdb::DB::Open(options, "testdb", &db);
-  status.ok();
+  
+  if (!status.ok()) {
+    std::cerr << "DB error: " << status.ToString();
+  }
 
   return EXIT_SUCCESS;
 }
