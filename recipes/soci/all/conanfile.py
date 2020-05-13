@@ -67,7 +67,7 @@ class SociConan(ConanFile):
             self.requires("libpq/12.2")
 
         if self.options.with_boost:
-            self.requires("boost/1.72.0")
+            self.requires("boost/1.73.0")
 
     _source_subfolder = "source_subfolder"
 
@@ -167,4 +167,3 @@ class SociConan(ConanFile):
         cmake.install()
         self.copy('LICENSE_1_0.txt', dst='licenses', src=self._source_subfolder)
         self.copy('cmake/SOCI-override.cmake')
-
