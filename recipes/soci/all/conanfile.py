@@ -129,7 +129,7 @@ class SociConan(ConanFile):
         if self._with_backend(self.options.with_backend_odbc):
             odbc = self._dependency('odbc')
             cmake.definitions["WITH_ODBC"] = "ON"
-            cmake.definitions["ODBC_INCLUDE_DIR"] = os.path.join(odbc.root, 'include')
+            cmake.definitions["ODBC_INCLUDE_DIR"] = ";".join(self.deps_cpp_info["odbc"].include_paths)
             if self.settings.os == 'Windows':
               cmake.definitions["ODBC_LIBRARY"] = os.path.join(odbc.root, 'lib', 'libodbc.lib')
             else:
