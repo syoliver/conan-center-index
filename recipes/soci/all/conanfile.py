@@ -30,7 +30,7 @@ class SociConan(ConanFile):
         "with_boost": [True, False],
         "with_all_backends": [True, False]
     }
-    options.update({"with_backend_%s" % backend: [True, False, None] for backend in backends})
+    options.update({"with_backend_%s" % backend: [True, False] for backend in backends})
 
     default_options = {
         "shared": True,
