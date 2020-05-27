@@ -2,3 +2,7 @@ sources:
   "1.4.2":
     sha256: 3b99a36c082a67ef6295eabd4fb3e32ab0bff7c6b0d397d6352697335f4e57eb
     url: https://github.com/edenhill/librdkafka/archive/v1.4.2.tar.gz
+patches:
+  "1.4.2":
+    - base_path: "source_subfolder"
+      patch_file: "patches/0001-zstd-cmake.patch"

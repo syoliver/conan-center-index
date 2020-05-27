@@ -11,7 +11,7 @@ class LibRdKafka(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     license = "BSD 2-Clause"
     generators = "cmake", "cmake_find_package"
-    exports_sources = "CMakeLists.txt"
+    exports_sources = ["CMakeLists.txt", "patches/**"]
 
     options = {
         "shared": [True, False],
@@ -78,8 +78,12 @@ class LibRdKafka(ConanFile):
         self._cmake.configure()
         return self._cmake
 
+    def _patch_sources(self):
+        for patch in self.conan_data.get("patches", {}).get(self.version, []):
+            tools.patch(**patch)
+
     def build(self):
-        #self._patch_sources()
+        self._patch_sources()
         cmake = self._configure_cmake()
         cmake.build()
 
@@ -91,3 +95,4 @@ class LibRdKafka(ConanFile):
     def package_info(self):
         self.cpp_info.names["cmake_find_package"] = "RdKafka"
         self.cpp_info.names["cmake_find_package_multi"] = "RdKafka"
+        self.cpp_info.requires = ["openssl::SSL", "zlib::zlib", "lz4::lz4", "zstd::zstd"]

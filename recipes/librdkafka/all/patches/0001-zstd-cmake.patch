@@ -1,0 +1,50 @@
+--- CMakeLists.txt	2020-05-27 23:01:18.406907580 +0000
++++ CMakeLists.txt	2020-05-27 23:19:52.190907504 +0000
+@@ -55,8 +55,8 @@
+ # }
+ 
+ # ZSTD {
+-find_package(Zstd QUIET)
+-if(ZSTD_FOUND)
++find_package(zstd QUIET)
++if(zstd_FOUND)
+   set(with_zstd_default ON)
+ else()
+   set(with_zstd_default OFF)
+@@ -150,8 +150,8 @@
+ option(ENABLE_LZ4_EXT "Enable external LZ4 library support" ON)
+ set(WITH_LZ4_EXT OFF)
+ if(ENABLE_LZ4_EXT)
+-  find_package(LZ4)
+-  if(LZ4_FOUND)
++  find_package(lz4)
++  if(lz4_FOUND)
+     set(WITH_LZ4_EXT ON)
+     list(APPEND BUILT_WITH "LZ4_EXT")
+   else()
+--- src/CMakeLists.txt	2020-05-27 23:20:37.135919200 +0000
++++ src/CMakeLists.txt	2020-05-27 23:49:58.965908903 +0000
+@@ -198,9 +198,9 @@
+ endif()
+ 
+ if(WITH_ZSTD)
+-  target_link_libraries(rdkafka PUBLIC ${ZSTD_LIBRARY})
+-  target_include_directories(rdkafka PUBLIC ${ZSTD_INCLUDE_DIR})
+-  message(STATUS "Found ZSTD: ${ZSTD_LIBRARY}")
++  target_link_libraries(rdkafka PUBLIC ${zstd_LIBRARY})
++  target_include_directories(rdkafka PUBLIC ${zstd_INCLUDE_DIR})
++  message(STATUS "Found ZSTD: ${zstd_LIBRARY}")
+ endif()
+ 
+ if(WITH_SSL)
+@@ -235,8 +235,8 @@
+ endif()
+ 
+ if(WITH_LZ4_EXT)
+-  target_include_directories(rdkafka PUBLIC ${LZ4_INCLUDE_DIRS})
+-  target_link_libraries(rdkafka PUBLIC LZ4::LZ4)
++  target_include_directories(rdkafka PUBLIC ${lz4_INCLUDE_DIRS})
++  target_link_libraries(rdkafka PUBLIC lz4::lz4)
+ endif()
+ 
+ # Set up path to these sources for other sub-projects (tests, examples)
