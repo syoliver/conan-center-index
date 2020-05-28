@@ -1,0 +1,24 @@
+--- saslauthd/Makefile.am	2020-05-28 20:06:15.320913967 +0000
++++ saslauthd/Makefile.am	2020-05-28 20:07:33.151907455 +0000
+@@ -32,20 +32,10 @@
+ 
+ saslcache_SOURCES = saslcache.c
+ 
+-EXTRA_DIST	= saslauthd.8 saslauthd.mdoc include \
++EXTRA_DIST	= include \
+ 		  getnameinfo.c getaddrinfo.c LDAP_SASLAUTHD
+ AM_CPPFLAGS	= -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_builddir)/common -I$(top_srcdir)/common
+ DEFS            = @DEFS@ -DSASLAUTHD_CONF_FILE_DEFAULT=\"@sysconfdir@/saslauthd.conf\" -I. -I$(srcdir) -I..
+ 
+ 
+-dist-hook: saslauthd.8
+ 
+-saslauthd.8: saslauthd.mdoc
+-	nroff -mdoc $(srcdir)/saslauthd.mdoc > $(srcdir)/saslauthd.8
+-
+-install-data-local: saslauthd.8
+-	$(mkinstalldirs) $(DESTDIR)$(mandir)/man8
+-	$(INSTALL_DATA) $(srcdir)/saslauthd.8 $(DESTDIR)$(mandir)/man8/saslauthd.8
+-
+-uninstall-local:
+-	-rm -rf $(DESTDIR)$(mandir)/man8/saslauthd.8
