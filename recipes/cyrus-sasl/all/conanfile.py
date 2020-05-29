@@ -1,4 +1,4 @@
-from conans import ConanFile, AutoToolsBuildEnvironment, tools
+from conans import ConanFile, MSBuild, AutoToolsBuildEnvironment, tools
 from conans.errors import ConanInvalidConfiguration
 import os
 import glob
@@ -16,37 +16,12 @@ class CyrusSASLConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
-        "fPIC": [True, False],
-        "with_cram": [True, False],
-        "with_digest": [True, False],
-        "with_scram": [True, False],
-        "with_otp": [True, False],
-        "with_krb4": [True, False],
-        "with_gssapi": [True, False],
-        "with_plain": [True, False],
-        "with_anon": [True, False],
-        "with_postgresql": [True, False],
-        "with_mysql": [True, False],
-        "with_ldapdb": [True, False],
-        "with_bdb": [True, False]
+        "fPIC": [True, False]
     }
 
     default_options = {
         "shared": False,
-        "fPIC": True,
-        "with_cram": True,
-        "with_digest": True,
-        "with_scram": True,
-        "with_otp": True,
-        "with_krb4": True,
-        "with_gssapi": True,
-        "with_plain": True,
-        "with_anon": True,
-
-        "with_postgresql": False,
-        "with_mysql": False,
-        "with_ldapdb": False,
-        "with_bdb": False,
+        "fPIC": True
     }
 
 
@@ -54,18 +29,22 @@ class CyrusSASLConan(ConanFile):
     _source_subfolder = "source_subfolder"
 
     def requirements(self):
-        if self.options.with_postgresql:
-            self.requires("libpq/11.5")
-        if self.options.with_mysql:
-            self.requires("libmysqlclient/8.0.17")
+        if self.settings.compiler == "Visual Studio":
+            self.requires("openssl/1.1.1g")
+        else:
+            if self.options.with_postgresql:
+                self.requires("libpq/11.5")
+            if self.options.with_mysql:
+                self.requires("libmysqlclient/8.0.17")
 
     def build_requirements(self):
-        if tools.os_info.is_windows and "CONAN_BASH_PATH" not in os.environ:
-            self.build_requires("msys2/20190524")
-
-        self.build_requires("autoconf/2.69")
-        self.build_requires("m4/1.4.18")
-        self.build_requires("libtool/2.4.6")
+        if self.settings.os == "Windows":
+            if tools.os_info.is_windows and "CONAN_BASH_PATH" not in os.environ:
+                self.build_requires("msys2/20190524")
+        else:
+            self.build_requires("autoconf/2.69")
+            self.build_requires("m4/1.4.18")
+            self.build_requires("libtool/2.4.6")
         
 
     def source(self):
@@ -73,11 +52,45 @@ class CyrusSASLConan(ConanFile):
         extracted_dir = glob.glob(self.name + "-*/")[0]
         os.rename(extracted_dir, self._source_subfolder)
 
+    def config_options(self):
+        if self.settings.compiler != "Visual Studio":
+            self.options.update({
+                "with_cram": [True, False],
+                "with_digest": [True, False],
+                "with_scram": [True, False],
+                "with_otp": [True, False],
+                "with_krb4": [True, False],
+                "with_gssapi": [True, False],
+                "with_plain": [True, False],
+                "with_anon": [True, False],
+                "with_postgresql": [True, False],
+                "with_mysql": [True, False],
+                "with_ldapdb": [True, False],
+                "with_bdb": [True, False]
+            })
+
+            self.default_options.update({
+                "with_cram": True,
+                "with_digest": True,
+                "with_scram": True,
+                "with_otp": True,
+                "with_krb4": True,
+                "with_gssapi": True,
+                "with_plain": True,
+                "with_anon": True,
+
+                "with_postgresql": False,
+                "with_mysql": False,
+                "with_ldapdb": False,
+                "with_bdb": False,
+            })
+            
     def configure(self):
         del self.settings.compiler.libcxx
         del self.settings.compiler.cppstd
         if self.settings.os == "Windows":
-            raise ConanInvalidConfiguration("Cyrus SASL package is not compatible with Windows.")
+            pass
+            #raise ConanInvalidConfiguration("Cyrus SASL package is not compatible with Windows.")
 
     def _configure_autotools(self):
         if self._autotools:
@@ -151,16 +164,76 @@ class CyrusSASLConan(ConanFile):
         for patch in self.conan_data["patches"][self.version]:
             tools.patch(**patch)
 
+        tools.replace_in_file(
+          os.path.join(self._source_subfolder, "win32", "openssl.props"),
+          "%(AdditionalIncludeDirectories)",
+          "{};%(AdditionalIncludeDirectories)".format(
+            ";".join(self.deps_cpp_info['openssl'].include_paths)
+          )
+        )
+
+        tools.replace_in_file(
+          os.path.join(self._source_subfolder, "win32", "openssl.props"),
+          "%(AdditionalLibraryDirectories)",
+          "{};%(AdditionalLibraryDirectories)".format(
+            ";".join(self.deps_cpp_info['openssl'].lib_paths)
+          )
+        )
+
+        tools.replace_in_file(
+          os.path.join(self._source_subfolder, "win32", "openssl.props"),
+          "libeay32",
+          ".lib;".join(
+            self.deps_cpp_info['openssl'].components['SSL'].libs + ["Crypt32"]
+          )
+        )
+        
+        tools.replace_in_file(
+          os.path.join(self._source_subfolder, "win32", "plugins.props"),
+          "powershell  -executionpolicy bypass -nologo -File makeinit.ps1",
+          "bash -c \"cd ../plugins &amp;&amp; ./makeinit.sh $(AssemblyName)\""
+        )
+
+        tools.replace_in_file(
+          os.path.join(self._source_subfolder, "plugins", "makeinit.sh"),
+          "plugin_init=\"$1\"",
+          "plugin_init=\"${1:8}_init.c\""
+        )
+
+
     def build(self):
         self._patch_files()
-        autotools = self._configure_autotools()
-        with tools.chdir(self._source_subfolder):
-            autotools.make()
+        if self.settings.compiler == "Visual Studio":
+            msbuild = MSBuild(self)
+            msbuild.build(os.path.join(self._source_subfolder, "win32", "cyrus-sasl-common.sln"))
+            msbuild.build(os.path.join(self._source_subfolder, "win32", "cyrus-sasl-core.sln"))
+
+            # requires = "krb5-gssapi/1.16.1@rion/stable" ?!
+            msbuild.build(os.path.join(self._source_subfolder, "win32", "cyrus-sasl-gssapiv2.sln"))
+
+            # requires = "lmdb/0.9.22@rion/stable"
+            msbuild.build(os.path.join(self._source_subfolder, "win32", "cyrus-sasl-sasldb.sln"))
+        else:
+            autotools = self._configure_autotools()
+            with tools.chdir(self._source_subfolder):
+                autotools.make()
 
     def package(self):
-        autotools = self._configure_autotools()
-        with tools.chdir(self._source_subfolder):
-            autotools.install()
+        
+        if self.settings.compiler == "Visual Studio":
+            autotools = self._configure_autotools()
+            with tools.chdir(self._source_subfolder):
+                autotools.install()
+        else:
+            self.copy("*.h", dst="include/sasl", src="include")
+            self.copy("*sasl2*.lib", dst="lib", keep_path=False)
+            self.copy("*common*.lib", dst="lib", keep_path=False)
+            self.copy("*common*.a", dst="lib", keep_path=False)
+
+            self.copy("*.dll", dst="bin", keep_path=False)
+            self.copy("*.so", dst="lib", keep_path=False)
+            self.copy("*.dylib", dst="lib", keep_path=False)
+            self.copy("*.a", dst="lib", keep_path=False)
             
         self.copy('COPYING', src=self._source_subfolder, dst="licenses")
         tools.rmdir(os.path.join(self.package_folder, "share"))
