@@ -53,23 +53,56 @@ class LibpqConan(ConanFile):
         if self.options.with_openssl:
             self.requires("openssl/1.1.1g")
 
+
+    @property
+    def _is_mingw(self):
+        return self.settings.os == "Windows" and self.settings.compiler == "gcc"
+
+    def _patch_mingw_files(self):
+        if not self._is_mingw:
+            return
+
+        # patch for zlib naming in mingw
+        tools.replace_in_file(os.path.join(self._source_subfolder, "configure"), '-lz ', '-lzlib ')
+
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = "postgresql-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
+        self._patch_mingw_files()
+
+
+    def _construct_ldflags(self, dependency):
+        dep = self.deps_cpp_info[dependency]
+        return (["-I{}".format(include_dir) for include_dir in dep.include_paths]
+               +["-L{}".format(link_dir)    for link_dir    in dep.lib_paths    ])
 
     def _configure_autotools(self):
         if not self._autotools:
             self._autotools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-            args = ['--without-readline']
-            args.append('--with-zlib' if self.options.with_zlib else '--without-zlib')
-            args.append('--with-openssl' if self.options.with_openssl else '--without-openssl')
+            args = ["--without-readline"]
+            if self.options.with_zlib:
+                args.append("--with-zlib")
+                self._autotools.flags.extend(self._construct_ldflags("zlib"))
+            else:
+                args.append("--without-zlib")
+
+            if self.options.with_openssl:
+                args.append("--with-openssl")
+                self._autotools.flags.extend(self._construct_ldflags("openssl"))
+            else:
+                args.append("--without-openssl")
+
             if tools.cross_building(self.settings) and not self.options.with_openssl:
                 args.append("--disable-strong-random")
             if self.settings.os != "Windows" and self.options.disable_rpath:
-                args.append('--disable-rpath')
+                args.append("--disable-rpath")
             if self._is_clang8_x86:
                 self._autotools.flags.append("-msse2")
+
+            # if self._is_mingw:
+            #    self._autotools.flags.append("-lmingwex")
+
             with tools.chdir(self._source_subfolder):
                 self._autotools.configure(args=args)
         return self._autotools
