@@ -10,7 +10,7 @@ class LibRdKafka(ConanFile):
     topics = ("conan", "apache", "kafka", "protocol", "producer", "consumer")
     settings = "os", "arch", "compiler", "build_type"
     license = "BSD 2-Clause"
-    generators = "cmake", "cmake_find_package"
+    generators = "cmake", "cmake_find_package", "pkg_config"
     exports_sources = ["CMakeLists.txt", "patches/**"]
 
     options = {
